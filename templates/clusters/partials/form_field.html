@@ -1,0 +1,28 @@
+<div class="form-field{% if field.field.widget.input_type == 'checkbox' %} form-field-checkbox{% endif %}{% if field.name == 'namespace_creator_token' or field.name == 'service_account_creator_token' or field.name == 'role_binding_creator_token' %} form-field-password{% endif %}">
+    {% if field.field.widget.input_type == 'checkbox' %}
+        <label class="checkbox-label">
+            {{ field }}
+            <span>{{ field.label }}</span>
+        </label>
+    {% elif field.name == "namespace_creator_token" or field.name == "service_account_creator_token" or field.name == "role_binding_creator_token" %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <div class="password-input-group">
+            {{ field }}
+            <button
+                type="button"
+                class="btn btn-outline btn-sm password-toggle"
+                data-target="{{ field.id_for_label }}"
+                aria-label="Show token"
+            >Show</button>
+        </div>
+    {% else %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+    {% endif %}
+    {% if field.help_text %}
+        <p class="field-help">{{ field.help_text }}</p>
+    {% endif %}
+    {% for error in field.errors %}
+        <p class="field-error">{{ error }}</p>
+    {% endfor %}
+</div>

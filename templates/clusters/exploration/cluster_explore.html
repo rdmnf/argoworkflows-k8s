@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ cluster.name }} · Cluster Explorer · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">Cluster explorer</p>
+    <h1>{{ cluster.name }}</h1>
+    <p class="muted">Query this cluster via the Kubernetes API using stored credentials.</p>
+    <div class="hero-actions">
+        <a href="{% url 'clusters:cluster_list' %}" class="btn btn-outline">← All clusters</a>
+        <a href="{% url 'clusters:cluster_edit' cluster.pk %}" class="btn btn-outline">Edit cluster</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="card stat-card stat-card-clickable" id="namespace-stat-card"{% if not api_error and namespace_count > 0 %} role="button" tabindex="0" aria-expanded="false" aria-controls="namespace-panel"{% endif %}>
+        <h2>Namespaces</h2>
+        {% if api_error %}
+            <p class="stat-value stat-value-sm">—</p>
+        {% else %}
+            <p class="stat-value">{{ namespace_count }}</p>
+        {% endif %}
+        {% if not api_error and namespace_count > 0 %}
+            <p class="stat-hint">Click to browse</p>
+        {% endif %}
+    </article>
+    <article class="card stat-card">
+        <h2>SSL</h2>
+        <p class="stat-value stat-value-sm">
+            {% if ssl_mode == "verified" %}
+                Verified
+            {% else %}
+                Unverified
+            {% endif %}
+        </p>
+    </article>
+    <article class="card stat-card">
+        <h2>Status</h2>
+        <p class="stat-value stat-value-sm">
+            {% if cluster.is_active %}
+                Active
+            {% else %}
+                Inactive
+            {% endif %}
+        </p>
+    </article>
+</section>
+
+<section class="card">
+    <h2>Cluster connection</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>API server</dt>
+            <dd><code class="small-code">{{ cluster.api_server_url }}</code></dd>
+        </div>
+        <div>
+            <dt>Default namespace</dt>
+            <dd>{{ cluster.default_namespace }}</dd>
+        </div>
+        <div>
+            <dt>SSL verification</dt>
+            <dd>
+                {% if ssl_mode == "verified" %}
+                    Enabled (using stored CA certificate)
+                {% else %}
+                    Disabled — add a CA certificate on the cluster to verify TLS
+                {% endif %}
+            </dd>
+        </div>
+    </dl>
+</section>
+
+<section class="card">
+    <h2>Token authorization (can-i)</h2>
+    <p class="muted section-lead">
+        Live permission checks using the Kubernetes authorization API.
+        Service account checks use sample namespace <code>{{ sample_namespace }}</code>.
+    </p>
+
+    <div class="auth-reports">
+        <article class="auth-report-card">
+            <h3>TOKEN FOR CREATING NAMESPACES</h3>
+            {% include "clusters/exploration/partials/token_auth_report.html" with report=token_auth.namespace_token %}
+        </article>
+        <article class="auth-report-card">
+            <h3>TOKEN FOR CREATING SERVICE ACCOUNT</h3>
+            {% include "clusters/exploration/partials/token_auth_report.html" with report=token_auth.service_account_token %}
+        </article>
+        <article class="auth-report-card">
+            <h3>TOKEN FOR CREATING ROLE AND ROLEBINDING</h3>
+            {% include "clusters/exploration/partials/token_auth_report.html" with report=token_auth.role_binding_token %}
+        </article>
+    </div>
+</section>
+
+<section class="card">
+    <div class="section-header-row">
+        <div>
+            <h2>Namespaces</h2>
+            {% if api_error %}
+                <p class="muted section-lead">Unable to query the cluster.</p>
+            {% elif namespace_count == 0 %}
+                <p class="muted section-lead">No namespaces found in this cluster.</p>
+            {% else %}
+                <p class="muted section-lead">
+                    <strong>{{ namespace_count }}</strong> namespace{{ namespace_count|pluralize }} available.
+                    Browse below to see names and details.
+                </p>
+            {% endif %}
+        </div>
+        {% if not api_error and namespace_count > 0 %}
+        <button
+            type="button"
+            class="btn btn-primary"
+            id="toggle-namespaces"
+            aria-expanded="false"
+            aria-controls="namespace-panel"
+        >
+            Browse namespaces
+        </button>
+        {% endif %}
+    </div>
+
+    {% if api_error %}
+    <div class="alert alert-error">
+        <strong>Could not fetch namespaces.</strong> {{ api_error }}
+    </div>
+    {% endif %}
+
+    {% if not api_error and namespace_count > 0 %}
+    <div id="namespace-panel" class="namespace-panel" hidden>
+        <p class="muted panel-intro">Click a namespace to expand its details.</p>
+        <div class="namespace-list">
+            {% for ns in namespaces %}
+            <details class="namespace-item">
+                <summary class="namespace-summary">
+                    <span class="namespace-name">{{ ns.name }}</span>
+                    <span class="status-badge {% if ns.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
+                        {{ ns.status }}
+                    </span>
+                </summary>
+                <div class="namespace-details">
+                    <dl class="detail-list">
+                        <div>
+                            <dt>Name</dt>
+                            <dd><code>{{ ns.name }}</code></dd>
+                        </div>
+                        <div>
+                            <dt>Status</dt>
+                            <dd>{{ ns.status }}</dd>
+                        </div>
+                        <div>
+                            <dt>Created</dt>
+                            <dd>{{ ns.created_at|date:"M j, Y, g:i a"|default:"—" }}</dd>
+                        </div>
+                        <div>
+                            <dt>Labels</dt>
+                            <dd>
+                                {% if ns.labels %}
+                                    {% for key, value in ns.labels.items %}
+                                        <code class="label-pair">{{ key }}={{ value }}</code>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="muted">None</span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/namespace-panel.js' %}"></script>
+{% endblock %}

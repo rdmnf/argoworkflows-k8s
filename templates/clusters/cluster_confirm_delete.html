@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ cluster.name }} · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Delete cluster</h1>
+    <p class="muted">This will permanently remove <strong>{{ cluster.name }}</strong> and its stored credentials.</p>
+</section>
+
+<section class="card">
+    <dl class="detail-list">
+        <div>
+            <dt>API server</dt>
+            <dd><code>{{ cluster.api_server_url }}</code></dd>
+        </div>
+        <div>
+            <dt>Namespace</dt>
+            <dd>{{ cluster.default_namespace }}</dd>
+        </div>
+    </dl>
+
+    <form method="post" class="form-actions">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-danger-solid">Delete cluster</button>
+        <a href="{% url 'clusters:cluster_list' %}" class="btn btn-outline">Cancel</a>
+    </form>
+</section>
+{% endblock %}

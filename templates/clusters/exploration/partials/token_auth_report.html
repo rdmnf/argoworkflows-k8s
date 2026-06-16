@@ -1,0 +1,61 @@
+{% if report.configured and not report.error %}
+<section class="can-i-checks">
+    <h4>can-i checks</h4>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Check</th>
+                    <th>Query</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for check in report.checks %}
+                <tr>
+                    <td>{{ check.label }}</td>
+                    <td><code class="small-code">{{ check.query }}</code></td>
+                    <td>
+                        {% if check.allowed %}
+                            <span class="status-badge status-active">yes</span>
+                        {% else %}
+                            <span class="status-badge status-inactive">no</span>
+                        {% endif %}
+                        {% if check.reason %}
+                            <span class="muted small"> — {{ check.reason }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if report.resource_rules or report.non_resource_rules %}
+<details class="rules-details">
+    <summary>All rules (SelfSubjectRulesReview)</summary>
+    {% if report.resource_rules %}
+    <h5>Resource rules</h5>
+    <ul class="plain-list rules-list">
+        {% for rule in report.resource_rules %}
+            <li><code class="small-code">{{ rule }}</code></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% if report.non_resource_rules %}
+    <h5>Non-resource rules</h5>
+    <ul class="plain-list rules-list">
+        {% for rule in report.non_resource_rules %}
+            <li><code class="small-code">{{ rule }}</code></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</details>
+{% endif %}
+
+{% elif report.error %}
+<div class="alert alert-error">{{ report.error }}</div>
+{% else %}
+<p class="muted">Token not configured.</p>
+{% endif %}

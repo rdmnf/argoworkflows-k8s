@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Profile · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Profile</h1>
+    <p class="muted">Information stored in the local SQLite database.</p>
+</section>
+
+<section class="card">
+    <h2>Django user record</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>User ID</dt>
+            <dd>{{ user.id }}</dd>
+        </div>
+        <div>
+            <dt>Username</dt>
+            <dd>{{ user.username }}</dd>
+        </div>
+        <div>
+            <dt>First name</dt>
+            <dd>{{ user.first_name|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Last name</dt>
+            <dd>{{ user.last_name|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Email</dt>
+            <dd>{{ user.email|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Last login</dt>
+            <dd>{{ user.last_login|date:"M j, Y, g:i a"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Date joined</dt>
+            <dd>{{ user.date_joined|date:"M j, Y, g:i a" }}</dd>
+        </div>
+    </dl>
+</section>
+
+{% if profile %}
+<section class="card">
+    <h2>Keycloak profile extension</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>Profile ID</dt>
+            <dd>{{ profile.id }}</dd>
+        </div>
+        <div>
+            <dt>Keycloak subject (sub)</dt>
+            <dd><code>{{ profile.keycloak_sub }}</code></dd>
+        </div>
+        <div>
+            <dt>Preferred username</dt>
+            <dd>{{ profile.preferred_username|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Email verified</dt>
+            <dd>{{ profile.email_verified|yesno:"Yes,No" }}</dd>
+        </div>
+        <div>
+            <dt>Keycloak groups</dt>
+            <dd>{% include "partials/group_list.html" with groups=profile.keycloak_groups %}</dd>
+        </div>
+        <div>
+            <dt>Django groups</dt>
+            <dd>
+                {% if user.groups.all %}
+                <ul class="group-list">
+                    {% for group in user.groups.all %}
+                        <li><span class="group-tag group-tag-django">{{ group.name }}</span></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <span class="muted">—</span>
+                {% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>Last OIDC login</dt>
+            <dd>{{ profile.last_oidc_login|date:"M j, Y, g:i a"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Profile created</dt>
+            <dd>{{ profile.created_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+        <div>
+            <dt>Profile updated</dt>
+            <dd>{{ profile.updated_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+    </dl>
+</section>
+{% else %}
+<section class="card">
+    <p>No extended profile found. Sign out and sign in again to sync from Keycloak.</p>
+</section>
+{% endif %}
+{% endblock %}

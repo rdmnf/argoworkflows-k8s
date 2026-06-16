@@ -1,0 +1,4 @@
+<form action="{% url 'oidc_logout' %}" method="post" class="logout-form">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline">Sign out of Keycloak</button>
+</form>

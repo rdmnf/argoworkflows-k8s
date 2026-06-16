@@ -1,0 +1,66 @@
+# Role binding creator — AWF "Token for creating roles and role bindings".
+# Creates argo-workflows-role Role + RoleBinding in each user namespace.
+# ServiceAccount: rbac-manager (kube-system)
+# Secret: rbac-manager-token
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rbac-manager
+  namespace: kube-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rbac-manager
+rules:
+  # Manage namespaced Role + RoleBinding in user namespaces
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["create", "get", "list", "watch", "update", "patch"]
+  # Argo Workflows (must match argo_workflows_policy_rules in the portal)
+  - apiGroups: ["argoproj.io"]
+    resources:
+      - workflows
+      - workflows/finalizers
+      - workflows/status
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+  - apiGroups: ["argoproj.io"]
+    resources:
+      - workflowtemplates
+      - clusterworkflowtemplates
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["argoproj.io"]
+    resources:
+      - workflowtaskresults
+      - workflowtasksets
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rbac-manager
+subjects:
+  - kind: ServiceAccount
+    name: rbac-manager
+    namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rbac-manager
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rbac-manager-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: rbac-manager
+type: kubernetes.io/service-account-token

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ workflow.subject }} · {% if admin_view %}Workflow observability{% else %}My Workflows{% endif %} · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    {% if admin_view %}
+        <p class="eyebrow">Admin observability</p>
+    {% endif %}
+    <h1>{{ workflow.subject }}</h1>
+    <p class="muted">
+        {% if workflow.description %}{{ workflow.description }}{% else %}Argo Workflow manifest{% endif %}
+    </p>
+    <div class="hero-actions">
+        {% if admin_view %}
+            <a href="{% url 'workflows:admin_workflows' %}" class="btn btn-outline">← All workflows</a>
+            <a href="{% url 'core:admin_user_detail' workflow.user_id %}" class="btn btn-outline">View user</a>
+        {% else %}
+            <a href="{% url 'workflows:my_workflows' %}" class="btn btn-outline">← My workflows</a>
+            {% if can_edit %}
+                <a href="{% url 'workflows:workflow_edit' workflow.pk %}" class="btn btn-outline">Edit</a>
+            {% endif %}
+            {% if can_submit %}
+                <form method="post" action="{% url 'workflows:workflow_submit' workflow.pk %}" class="inline-submit-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary workflow-submit-btn">Submit to cluster</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+</section>
+
+{% if not admin_view and not can_submit and submit_block_reason %}
+<section class="card">
+    <div class="alert alert-error">{{ submit_block_reason }}</div>
+</section>
+{% endif %}
+
+{% if not admin_view and can_submit %}
+<section class="card">
+    <h2>Submit to cluster</h2>
+    <p class="muted section-lead">
+        Uses your personal service account bearer token stored from provisioning
+        (read from the SA token secret) to create the workflow
+        in namespace <code>{{ provision.namespace_name }}</code> as
+        <code>{{ provision.service_account_name }}</code>.
+    </p>
+</section>
+{% endif %}
+
+{% if admin_view and profile %}
+<section class="card">
+    <h2>Owner</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>Username</dt>
+            <dd>{{ workflow.user.username }}</dd>
+        </div>
+        <div>
+            <dt>Email</dt>
+            <dd>{{ workflow.user.email|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Keycloak sub</dt>
+            <dd><code>{{ profile.keycloak_sub|default:"—" }}</code></dd>
+        </div>
+    </dl>
+</section>
+{% endif %}
+
+<section class="card">
+    <h2>Workflow metadata</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>Cluster</dt>
+            <dd>{{ workflow.cluster.name }}</dd>
+        </div>
+        <div>
+            <dt>Namespace</dt>
+            <dd><code>{{ workflow.namespace_name|default:"—" }}</code></dd>
+        </div>
+        <div>
+            <dt>Status</dt>
+            <dd>
+                <span class="status-badge {% if workflow.status == 'ready' %}status-active{% else %}status-inactive{% endif %}">
+                    {{ workflow.get_status_display }}
+                </span>
+            </dd>
+        </div>
+        <div>
+            <dt>Created</dt>
+            <dd>{{ workflow.created_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+        <div>
+            <dt>Updated</dt>
+            <dd>{{ workflow.updated_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+    </dl>
+</section>
+
+<section class="card">
+    <h2>Manifest</h2>
+    <pre class="manifest-block"><code>{{ workflow.manifest }}</code></pre>
+</section>
+
+{% include "workflows/partials/submission_history.html" with runs=runs admin_view=admin_view|default:False %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if not admin_view %}
+<script>
+document.querySelector(".inline-submit-form")?.addEventListener("submit", () => {
+    const btn = document.querySelector(".workflow-submit-btn");
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Submitting…";
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

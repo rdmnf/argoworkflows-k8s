@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Home · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <p class="eyebrow">Kubernetes · Argo Workflows</p>
+    <h1>Submit and manage workflows on your clusters</h1>
+    <p class="lead">
+        Request a personal namespace, service account, and RBAC on connected clusters,
+        then author and submit Argo Workflow manifests from one place.
+    </p>
+
+    {% if user.is_authenticated %}
+        <div class="hero-actions">
+            <a href="{% url 'workflows:my_workflows' %}" class="btn btn-primary">My workflows</a>
+            <a href="{% url 'resources:my_resources' %}" class="btn btn-outline">My resources</a>
+            <a href="{% url 'core:dashboard' %}" class="btn btn-outline">Dashboard</a>
+        </div>
+        <p class="muted">Signed in as <strong>{{ user.get_full_name|default:user.username }}</strong></p>
+    {% else %}
+        <div class="hero-actions">
+            <a href="{% url 'oidc_authentication_init' %}" class="btn btn-primary">Sign in with Keycloak</a>
+        </div>
+        <p class="muted">You will be redirected to your Keycloak realm for authentication.</p>
+    {% endif %}
+</section>
+
+<section class="feature-grid">
+    <article class="card">
+        <h2>Personal namespaces</h2>
+        <p>Each user gets a dedicated namespace, service account, and Argo Workflows RBAC on selected clusters.</p>
+    </article>
+    <article class="card">
+        <h2>Workflow authoring</h2>
+        <p>Save multiple Argo Workflow YAML scripts and submit them using your personal cluster token.</p>
+    </article>
+    <article class="card">
+        <h2>Admin observability</h2>
+        <p>Administrators can manage clusters, inspect user provisions, and monitor workflow activity.</p>
+    </article>
+</section>
+{% endblock %}

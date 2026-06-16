@@ -1,0 +1,44 @@
+# Namespace creator — AWF "Token for creating namespaces".
+# ServiceAccount: namespace-creator-sa (default)
+# Secret: namespace-creator-sa-token
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: namespace-creator-sa
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-creator-role
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["create", "get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: namespace-creator-binding
+subjects:
+  - kind: ServiceAccount
+    name: namespace-creator-sa
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: namespace-creator-role
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: namespace-creator-sa-token
+  namespace: default
+  annotations:
+    kubernetes.io/service-account.name: namespace-creator-sa
+type: kubernetes.io/service-account-token

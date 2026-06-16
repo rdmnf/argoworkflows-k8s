@@ -1,0 +1,120 @@
+<article class="provision-card">
+    <div class="provision-card-header">
+        <div>
+            <h3>{{ provision.cluster.name }}</h3>
+            <p class="muted small">{{ provision.cluster.api_server_url }}</p>
+        </div>
+        <div class="provision-badges">
+            <span class="status-badge {% if provision.status == 'active' %}status-active{% elif provision.status == 'failed' %}status-inactive{% endif %}">
+                {{ provision.get_status_display }}
+            </span>
+            {% if provision.provision_steps %}
+                {% if provision.cluster_verified %}
+                    <span class="status-badge status-active">On cluster</span>
+                {% else %}
+                    <span class="status-badge status-inactive">Not verified</span>
+                {% endif %}
+                {% if provision.status == 'active' and not provision.has_personal_token %}
+                    <span class="status-badge status-inactive">Token missing</span>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% include "resources/partials/provision_steps.html" %}
+
+    <dl class="detail-list">
+        <div>
+            <dt>Keycloak sub</dt>
+            <dd><code class="small-code">{{ provision.keycloak_sub }}</code></dd>
+        </div>
+        <div>
+            <dt>Namespace</dt>
+            <dd><code>{{ provision.namespace_name }}</code></dd>
+        </div>
+        <div>
+            <dt>Service account</dt>
+            <dd><code>{{ provision.service_account_name }}</code></dd>
+        </div>
+        <div>
+            <dt>Argo Workflows role</dt>
+            <dd><code>{{ provision.argo_workflows_role_name }}</code></dd>
+        </div>
+        <div>
+            <dt>Role binding</dt>
+            <dd>
+                <code>{{ provision.argo_workflows_role_binding_name }}</code>
+                → <code>{{ provision.service_account_name }}</code>
+            </dd>
+        </div>
+        {% if show_token and provision.status == 'active' and provision.has_personal_token %}
+        <div>
+            <dt>Service account token</dt>
+            <dd>
+                <div class="password-input-group">
+                    <input
+                        type="password"
+                        value="{{ provision.service_account_token }}"
+                        readonly
+                        class="token-readonly"
+                        id="token-{{ provision.pk }}"
+                    >
+                    <button
+                        type="button"
+                        class="btn btn-outline btn-sm password-toggle"
+                        data-target="token-{{ provision.pk }}"
+                        aria-label="Show token"
+                    >Show</button>
+                </div>
+            </dd>
+        </div>
+        {% elif show_token_masked and provision.status == 'active' and provision.has_personal_token %}
+        <div>
+            <dt>Service account token</dt>
+            <dd><code>{{ provision.masked_token }}</code></dd>
+        </div>
+        {% elif provision.status == 'active' and not provision.has_personal_token %}
+        <div>
+            <dt>Service account token</dt>
+            <dd class="field-error">
+                Not stored yet. Click <strong>Verify / issue token</strong> below to create the
+                token secret and save your personal bearer token for workflow submission.
+            </dd>
+        </div>
+        {% elif provision.status == 'active' and provision.has_personal_token %}
+        <div>
+            <dt>Service account token</dt>
+            <dd class="muted">Stored for workflow submission. Token display is disabled.</dd>
+        </div>
+        {% endif %}
+        {% if provision.status == 'failed' and provision.error_message %}
+        <div>
+            <dt>Error</dt>
+            <dd class="field-error">{{ provision.error_message }}</dd>
+        </div>
+        {% endif %}
+        <div>
+            <dt>Requested</dt>
+            <dd>{{ provision.created_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+        <div>
+            <dt>Updated</dt>
+            <dd>{{ provision.updated_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+    </dl>
+
+    <div class="form-actions">
+        {% if show_verify %}
+        <form method="post" action="{% url verify_url provision.pk %}" class="verify-provision-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline verify-provision-btn">
+                {% if provision.status == 'active' and not provision.has_personal_token %}
+                    Verify / issue token
+                {% else %}
+                    Verify on cluster
+                {% endif %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</article>

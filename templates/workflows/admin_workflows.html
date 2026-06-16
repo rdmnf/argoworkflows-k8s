@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Workflow observability · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">Admin only</p>
+    <h1>Workflow observability</h1>
+    <p class="muted">Browse and inspect Argo Workflow scripts authored by all users.</p>
+    <div class="hero-actions">
+        <a href="{% url 'core:admin_control' %}" class="btn btn-outline">← Admin panel</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="card stat-card">
+        <h2>Total workflows</h2>
+        <p class="stat-value">{{ total_count }}</p>
+    </article>
+    <article class="card stat-card">
+        <h2>Ready</h2>
+        <p class="stat-value">{{ ready_count }}</p>
+    </article>
+    <article class="card stat-card">
+        <h2>Drafts</h2>
+        <p class="stat-value">{{ draft_count }}</p>
+    </article>
+    <article class="card stat-card">
+        <h2>Submitted runs</h2>
+        <p class="stat-value">{{ submission_count }}</p>
+    </article>
+</section>
+
+<section class="card">
+    <form method="get" class="filter-form">
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="q">Search</label>
+                <input type="search" id="q" name="q" value="{{ query }}" placeholder="Subject, user, namespace…">
+            </div>
+            <div class="form-field">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">All statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}"{% if status_filter == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            {% if query or status_filter %}
+                <a href="{% url 'workflows:admin_workflows' %}" class="btn btn-outline">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <h2>All workflows</h2>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>User</th>
+                    <th>Cluster</th>
+                    <th>Namespace</th>
+                    <th>Status</th>
+                    <th>Updated</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for workflow in workflows %}
+                <tr>
+                    <td>
+                        <strong>{{ workflow.subject }}</strong>
+                        {% if workflow.description %}
+                            <br><span class="muted small">{{ workflow.description|truncatechars:60 }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'core:admin_user_detail' workflow.user_id %}" class="cluster-link">
+                            {{ workflow.user.username }}
+                        </a>
+                    </td>
+                    <td>{{ workflow.cluster.name }}</td>
+                    <td><code>{{ workflow.namespace_name|default:"—" }}</code></td>
+                    <td>
+                        <span class="status-badge {% if workflow.status == 'ready' %}status-active{% else %}status-inactive{% endif %}">
+                            {{ workflow.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ workflow.updated_at|date:"M j, Y, g:i a" }}</td>
+                    <td class="table-actions">
+                        <a href="{% url 'workflows:admin_workflow_detail' workflow.pk %}" class="btn btn-outline btn-sm">Inspect</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="muted">No workflows match your filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

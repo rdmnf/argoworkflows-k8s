@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load access_tags %}
+
+{% block title %}Admin · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">Admin only</p>
+    <h1>Admin panel</h1>
+    <p class="muted">Restricted to users in the Keycloak <strong>admin</strong> group.</p>
+</section>
+
+<section class="stats-grid">
+    <article class="card stat-card">
+        <h2>Total users</h2>
+        <p class="stat-value">{{ total_users }}</p>
+    </article>
+    <article class="card stat-card">
+        <h2>Synced profiles</h2>
+        <p class="stat-value">{{ profiles|length }}</p>
+    </article>
+    <article class="card stat-card">
+        <h2>K8s clusters</h2>
+        <p class="stat-value">{{ cluster_count }}</p>
+    </article>
+    <article class="card stat-card">
+        <h2>Workflows</h2>
+        <p class="stat-value">{{ workflow_count }}</p>
+    </article>
+</section>
+
+<section class="card">
+    <h2>Workflow observability</h2>
+    <p class="muted section-lead">
+        Inspect Argo Workflow scripts authored by users across all clusters.
+    </p>
+    <div class="hero-actions">
+        <a href="{% url 'workflows:admin_workflows' %}" class="btn btn-primary">Browse workflows</a>
+    </div>
+</section>
+
+<section class="card">
+    <h2>K8s cluster management</h2>
+    <p class="muted section-lead">
+        Register Kubernetes clusters with API server URLs, service account tokens, and related settings.
+    </p>
+    <div class="hero-actions">
+        <a href="{% url 'clusters:cluster_list' %}" class="btn btn-primary">Manage clusters</a>
+    </div>
+</section>
+
+<section class="card">
+    <h2>User overview</h2>
+    <p class="muted section-lead">Click a user to view OIDC details and resource provisions.</p>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Keycloak sub</th>
+                    <th>Email</th>
+                    <th>Groups</th>
+                    <th>Resources</th>
+                    <th>Last OIDC login</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in profiles %}
+                <tr>
+                    <td>
+                        <a href="{% url 'core:admin_user_detail' profile.user_id %}" class="cluster-link">
+                            {{ profile.user.username }}
+                        </a>
+                    </td>
+                    <td><code class="small-code">{{ profile.keycloak_sub|default:"—"|truncatechars:24 }}</code></td>
+                    <td>{{ profile.user.email|default:"—" }}</td>
+                    <td>{% include "partials/group_list.html" with groups=profile.keycloak_groups %}</td>
+                    <td>{{ profile.user.resource_provisions.count }}</td>
+                    <td>{{ profile.last_oidc_login|date:"M j, Y, g:i a"|default:"—" }}</td>
+                    <td class="table-actions">
+                        <a href="{% url 'core:admin_user_detail' profile.user_id %}" class="btn btn-outline btn-sm">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="muted">No user profiles yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

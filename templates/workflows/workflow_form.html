@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_create %}New workflow{% else %}Edit {{ workflow.subject }}{% endif %} · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>{% if is_create %}Edit workflow{% else %}Edit workflow{% endif %}</h1>
+    <p class="muted">{{ workflow.subject }}</p>
+    <div class="hero-actions">
+        <a href="{% url 'workflows:my_workflows' %}" class="btn btn-outline">← My workflows</a>
+    </div>
+</section>
+
+<section class="card">
+    <form method="post" class="stacked-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="form-grid">
+            {% for field in form %}
+            <div class="form-field{% if field.name == 'manifest' or field.name == 'description' %} form-field-wide{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="field-help">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save changes</button>
+            <a href="{% url 'workflows:workflow_detail' workflow.pk %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

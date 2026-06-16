@@ -1,0 +1,48 @@
+# Service account creator — AWF "Token for creating service accounts".
+# Creates workflow-runner SAs and kubernetes.io/service-account-token Secrets in user namespaces.
+# ServiceAccount: sa-manager (kube-system)
+# Secret: sa-manager-token
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-manager
+  namespace: kube-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sa-manager
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["create", "get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sa-manager-binding
+subjects:
+  - kind: ServiceAccount
+    name: sa-manager
+    namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: sa-manager
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sa-manager-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: sa-manager
+type: kubernetes.io/service-account-token

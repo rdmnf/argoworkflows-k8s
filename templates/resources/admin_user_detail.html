@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }} · User detail · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">Admin only</p>
+    <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+    <p class="muted">OIDC profile and resource provisions for this user.</p>
+    <div class="hero-actions">
+        <a href="{% url 'core:admin_control' %}" class="btn btn-outline">← Admin panel</a>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Django user</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>User ID</dt>
+            <dd>{{ profile_user.id }}</dd>
+        </div>
+        <div>
+            <dt>Username</dt>
+            <dd>{{ profile_user.username }}</dd>
+        </div>
+        <div>
+            <dt>Email</dt>
+            <dd>{{ profile_user.email|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Full name</dt>
+            <dd>{{ profile_user.get_full_name|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Last login</dt>
+            <dd>{{ profile_user.last_login|date:"M j, Y, g:i a"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Date joined</dt>
+            <dd>{{ profile_user.date_joined|date:"M j, Y, g:i a" }}</dd>
+        </div>
+    </dl>
+</section>
+
+<section class="card">
+    <h2>OIDC information</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>Keycloak subject (sub)</dt>
+            <dd><code class="small-code">{{ profile.keycloak_sub|default:"—" }}</code></dd>
+        </div>
+        <div>
+            <dt>Preferred username</dt>
+            <dd>{{ profile.preferred_username|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Email verified</dt>
+            <dd>{{ profile.email_verified|yesno:"Yes,No" }}</dd>
+        </div>
+        <div>
+            <dt>Keycloak groups</dt>
+            <dd>{% include "partials/group_list.html" with groups=profile.keycloak_groups %}</dd>
+        </div>
+        <div>
+            <dt>Last OIDC login</dt>
+            <dd>{{ profile.last_oidc_login|date:"M j, Y, g:i a"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Profile created</dt>
+            <dd>{{ profile.created_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+        <div>
+            <dt>Profile updated</dt>
+            <dd>{{ profile.updated_at|date:"M j, Y, g:i a" }}</dd>
+        </div>
+    </dl>
+</section>
+
+<section class="card">
+    <h2>Resource provisions</h2>
+    {% if provisions %}
+        <div class="provision-list">
+            {% for provision in provisions %}
+            {% include "resources/partials/provision_card.html" with provision=provision show_token=False show_token_masked=True show_verify=True verify_url="resources:admin_verify_provision" %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">This user has not requested any resources yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

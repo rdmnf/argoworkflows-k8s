@@ -1,0 +1,9 @@
+{% if groups %}
+<ul class="group-list">
+    {% for group in groups %}
+        <li><span class="group-tag">{{ group }}</span></li>
+    {% endfor %}
+</ul>
+{% else %}
+<span class="muted">—</span>
+{% endif %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Resources · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>My resources</h1>
+    <p class="muted">Request a dedicated namespace and service account on a Kubernetes cluster.</p>
+</section>
+
+{% if profile %}
+<section class="card">
+    <h2>Your OIDC identity</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>Keycloak subject (sub)</dt>
+            <dd><code>{{ profile.keycloak_sub|default:"—" }}</code></dd>
+        </div>
+        <div>
+            <dt>Preferred username</dt>
+            <dd>{{ profile.preferred_username|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Planned namespace</dt>
+            <dd>{% if planned_namespace %}<code>{{ planned_namespace }}</code>{% else %}—{% endif %}</dd>
+        </div>
+        <div>
+            <dt>Planned service account</dt>
+            <dd>{% if planned_service_account %}<code>{{ planned_service_account }}</code>{% else %}—{% endif %}</dd>
+        </div>
+        <div>
+            <dt>Planned Argo Workflows role</dt>
+            <dd><code>{{ planned_role }}</code></dd>
+        </div>
+        <div>
+            <dt>Planned role binding</dt>
+            <dd><code>{{ planned_role_binding }}</code> → service account above</dd>
+        </div>
+    </dl>
+</section>
+{% endif %}
+
+<section class="card">
+    <h2>Request resource</h2>
+    {% if can_request %}
+        <p class="muted section-lead">
+            Creates a namespace (via <strong>TOKEN FOR CREATING NAMESPACES</strong>),
+            a service account (via <strong>TOKEN FOR CREATING SERVICE ACCOUNT</strong>),
+            and a namespaced Argo Workflows role + role binding (via <strong>TOKEN FOR CREATING ROLE AND ROLEBINDING</strong>)
+            in the user's namespace on the selected cluster. Each namespace gets the same service account
+            name (<code>workflow-runner</code>). A personal service account token
+            is also stored (from a Kubernetes SA token secret) for submitting workflows.
+        </p>
+        <form method="post" class="stacked-form">
+            {% csrf_token %}
+            <div class="form-grid">
+                {% for field in form %}
+                <div class="form-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="field-help">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="request-resource-btn">
+                    Request resource
+                </button>
+                <p class="muted small" id="request-resource-hint" hidden>
+                    Provisioning on the cluster — this may take up to a minute…
+                </p>
+            </div>
+        </form>
+    {% elif active_clusters == 0 %}
+        <p class="muted">No active clusters are configured. Ask an admin to register a cluster first.</p>
+    {% else %}
+        <p class="muted">Sign out and sign in again so your Keycloak subject can be synced before requesting resources.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h2>Your provisions</h2>
+    {% if provisions %}
+        <div class="provision-list">
+            {% for provision in provisions %}
+            {% include "resources/partials/provision_card.html" with provision=provision show_token=resource_provision_show_user_token show_token_masked=False show_verify=True verify_url="resources:verify_provision" %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">No resources requested yet.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/token-toggle.js' %}"></script>
+<script>
+document.querySelector(".stacked-form")?.addEventListener("submit", () => {
+    const btn = document.getElementById("request-resource-btn");
+    const hint = document.getElementById("request-resource-hint");
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Provisioning…";
+    }
+    if (hint) {
+        hint.hidden = false;
+    }
+});
+
+document.querySelectorAll(".verify-provision-form").forEach((form) => {
+    form.addEventListener("submit", () => {
+        const btn = form.querySelector(".verify-provision-btn");
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = "Verifying…";
+        }
+    });
+});
+</script>
+{% endblock %}

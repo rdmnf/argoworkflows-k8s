@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Dashboard</h1>
+    <p class="muted">You are authenticated and your session is active.</p>
+</section>
+
+<section class="card">
+    <h2>Account overview</h2>
+    <dl class="detail-list">
+        <div>
+            <dt>Username</dt>
+            <dd>{{ user.username }}</dd>
+        </div>
+        <div>
+            <dt>Email</dt>
+            <dd>{{ user.email|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Full name</dt>
+            <dd>{{ user.get_full_name|default:"—" }}</dd>
+        </div>
+        {% if profile %}
+        <div>
+            <dt>Keycloak subject</dt>
+            <dd><code>{{ profile.keycloak_sub }}</code></dd>
+        </div>
+        <div>
+            <dt>Preferred username</dt>
+            <dd>{{ profile.preferred_username|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Email verified</dt>
+            <dd>{{ profile.email_verified|yesno:"Yes,No" }}</dd>
+        </div>
+        <div>
+            <dt>Last OIDC login</dt>
+            <dd>{{ profile.last_oidc_login|date:"M j, Y, g:i a"|default:"—" }}</dd>
+        </div>
+        <div>
+            <dt>Keycloak groups</dt>
+            <dd>{% include "partials/group_list.html" with groups=profile.keycloak_groups %}</dd>
+        </div>
+        {% endif %}
+    </dl>
+    <div class="card-actions">
+        <a href="{% url 'resources:my_resources' %}" class="btn btn-primary">My resources</a>
+        {% include "partials/logout_button.html" %}
+    </div>
+</section>
+{% endblock %}

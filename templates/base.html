@@ -1,0 +1,61 @@
+{% load static access_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kubernetes Workflows{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="{% url 'core:home' %}" class="logo">
+                <span class="logo-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L20 7V17L12 22L4 17V7L12 2Z" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M8 12H16M12 8V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="logo-text">Kubernetes Workflows</span>
+            </a>
+            <nav class="nav">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'core:dashboard' %}">Dashboard</a>
+                    <a href="{% url 'resources:my_resources' %}">My resources</a>
+                    <a href="{% url 'workflows:my_workflows' %}">My workflows</a>
+                    <a href="{% url 'core:profile' %}">Profile</a>
+                    {% if user|is_admin %}
+                        <a href="{% url 'core:admin_control' %}" class="nav-admin">Admin</a>
+                    {% endif %}
+                    {% include "partials/logout_button.html" %}
+                {% else %}
+                    <a href="{% url 'oidc_authentication_init' %}" class="btn btn-primary">Sign in with Keycloak</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="container messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>Kubernetes Workflows · Authenticated via Keycloak OIDC</p>
+        </div>
+    </footer>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% if provision.provision_steps %}
+<section class="provision-steps">
+    <h4>Provisioning steps</h4>
+    <ol class="step-list">
+        {% for step in provision.provision_steps %}
+        <li class="step-item step-{{ step.status }}">
+            <div class="step-header">
+                <span class="step-label">{{ step.label }}</span>
+                <span class="status-badge step-badge step-badge-{{ step.status }}">
+                    {{ step.status|title }}
+                </span>
+            </div>
+            <p class="step-detail">{{ step.detail }}</p>
+            {% if step.action %}
+                <p class="step-meta muted small">Action: {{ step.action|title }}</p>
+            {% endif %}
+            {% if step.verified %}
+                <p class="step-meta muted small">Verified on cluster: Yes</p>
+            {% elif step.key == "save_token" and step.status == "success" %}
+                <p class="step-meta muted small">Saved to provision record: Yes</p>
+            {% elif step.key|slice:":7" == "verify_" %}
+                <p class="step-meta field-error small">Verified on cluster: No</p>
+            {% endif %}
+            {% if step.error %}
+                <p class="step-error">{{ step.error }}</p>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+{% endif %}

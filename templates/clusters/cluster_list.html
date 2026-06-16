@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}K8s Cluster Management · Kubernetes Workflows{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">Admin only</p>
+    <h1>K8s cluster management</h1>
+    <p class="muted">Register Kubernetes clusters with API server URLs and service account tokens.</p>
+    <div class="hero-actions">
+        <a href="{% url 'core:admin_control' %}" class="btn btn-outline">← Back to admin panel</a>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Add cluster</h2>
+    <form method="post" class="stacked-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="form-grid">
+            {% for field in form %}
+                {% include "clusters/partials/form_field.html" with field=field %}
+            {% endfor %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add cluster</button>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <h2>Registered clusters</h2>
+    <p class="muted section-lead">{{ clusters|length }} cluster{{ clusters|length|pluralize }} configured.</p>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>API server</th>
+                    <th>Namespace</th>
+                    <th>NS token</th>
+                    <th>SA token</th>
+                    <th>RB token</th>
+                    <th>Status</th>
+                    <th>Added by</th>
+                    <th>Updated</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cluster in clusters %}
+                <tr>
+                    <td>
+                        <strong><a href="{% url 'clusters:cluster_explore' cluster.pk %}" class="cluster-link">{{ cluster.name }}</a></strong>
+                        {% if cluster.description %}
+                            <br><span class="muted small">{{ cluster.description|truncatechars:60 }}</span>
+                        {% endif %}
+                    </td>
+                    <td><code class="small-code">{{ cluster.api_server_url }}</code></td>
+                    <td>{{ cluster.default_namespace }}</td>
+                    <td><code>{{ cluster.masked_namespace_token }}</code></td>
+                    <td><code>{{ cluster.masked_service_account_creator_token|default:"—" }}</code></td>
+                    <td><code>{{ cluster.masked_role_binding_creator_token|default:"—" }}</code></td>
+                    <td>
+                        {% if cluster.is_active %}
+                            <span class="status-badge status-active">Active</span>
+                        {% else %}
+                            <span class="status-badge status-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ cluster.created_by.username|default:"—" }}</td>
+                    <td>{{ cluster.updated_at|date:"M j, Y, g:i a" }}</td>
+                    <td class="table-actions">
+                        <a href="{% url 'clusters:cluster_explore' cluster.pk %}" class="btn btn-outline btn-sm">Open</a>
+                        <a href="{% url 'clusters:cluster_edit' cluster.pk %}" class="btn btn-outline btn-sm">Edit</a>
+                        <a href="{% url 'clusters:cluster_delete' cluster.pk %}" class="btn btn-outline btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="muted">No clusters registered yet. Use the form above to add one.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/token-toggle.js' %}"></script>
+{% endblock %}
