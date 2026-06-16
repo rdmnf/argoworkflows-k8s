@@ -6,6 +6,8 @@ Visual overview of the portal: who it is for, how users move through it, and wha
 
 > **Development and testing only.** Do not use in production without a full security review.
 
+**Release `0.0.1` tested stack:** Kubernetes `1.34.5`, Argo Workflows `v3.7.14` (`quay.io/argoproj/workflow-controller:v3.7.14`). See [README — Tested cluster stack](../README.md#tested-cluster-stack).
+
 ## At a glance
 
 **Kubernetes Argo Workflows** is a web portal that connects **OIDC SSO** (e.g. Keycloak, Okta, Microsoft Entra ID) to **Argo Workflows** on Kubernetes. Each user can receive an isolated namespace, a `workflow-runner` service account, Argo RBAC, and a personal token to submit workflows from the browser.

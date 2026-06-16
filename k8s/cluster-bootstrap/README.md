@@ -6,6 +6,8 @@ Apply these once per cluster (with cluster-admin credentials) before registering
 
 > **Development and testing only.** These manifests grant broad cluster-wide permissions to the bootstrap service accounts. Use only on dev/test clusters. **Not for production.**
 
+**Release `0.0.1`:** tested against Kubernetes `1.34.5` and Argo Workflows `v3.7.14`. See [main README](../README.md#tested-cluster-stack).
+
 ## Prerequisites
 
 | Requirement | Notes |

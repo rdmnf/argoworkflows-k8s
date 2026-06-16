@@ -1,8 +1,21 @@
 # Kubernetes Argo Workflows
 
+**Release `0.0.1`** · dev/test only
+
 A web portal for **multi-tenant Argo Workflows** on Kubernetes. Users access the platform through **OpenID Connect (OIDC) single sign-on (SSO)** — credentials stay with your identity provider, not in the application. The portal provisions isolated cluster resources per user and lets them author and submit **Argo Workflow** manifests from the browser.
 
 > **Development and testing only.** Kubernetes Argo Workflows is in active development. It uses SQLite, stores cluster tokens in the database, and ships with dev-oriented defaults (e.g. `DJANGO_DEBUG=true`, optional TLS verification against Kubernetes). **Do not deploy this to production** without a full security review, hardened storage, and production-grade identity and secrets management.
+
+## Tested cluster stack
+
+Versions used for development and validation of **release `0.0.1`**:
+
+| Component | Version |
+|-----------|---------|
+| **Kubernetes** | `1.34.5` |
+| **Argo Workflows** (workflow controller) | `v3.7.14` — `quay.io/argoproj/workflow-controller:v3.7.14` |
+
+Other Kubernetes or Argo versions may work but are not documented for this release. Install Argo Workflows before registering a cluster (see [Requirements](#requirements)).
 
 ## At a glance
 
