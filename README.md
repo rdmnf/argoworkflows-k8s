@@ -1,6 +1,6 @@
 # Kubernetes Argo Workflows
 
-**Release `0.0.1`** · dev/test only
+**Release `0.0.1`** · dev/test only - feel free to send pull requests!
 
 A web portal for **multi-tenant Argo Workflows** on Kubernetes. Users access the platform through **OpenID Connect (OIDC) single sign-on (SSO)** — credentials stay with your identity provider, not in the application. The portal provisions isolated cluster resources per user and lets them author and submit **Argo Workflow** manifests from the browser.
 
