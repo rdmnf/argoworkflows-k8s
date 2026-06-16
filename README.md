@@ -4,6 +4,18 @@ A web portal for **multi-tenant Argo Workflows** on Kubernetes. Users access the
 
 > **Development and testing only.** Kubernetes Argo Workflows is in active development. It uses SQLite, stores cluster tokens in the database, and ships with dev-oriented defaults (e.g. `DJANGO_DEBUG=true`, optional TLS verification against Kubernetes). **Do not deploy this to production** without a full security review, hardened storage, and production-grade identity and secrets management.
 
+## At a glance
+
+![Platform architecture — OIDC SSO, portal, and Kubernetes cluster](docs/images/platform-architecture.png)
+
+| Layer | Role |
+|-------|------|
+| **Identity (OIDC SSO)** | Users sign in through your IdP (e.g. Keycloak, Okta, Entra ID); no passwords stored in the portal |
+| **Portal (Django)** | Provisions per-user resources, stores workflow YAML, submits to the cluster API |
+| **Kubernetes + Argo** | Runs workflows in isolated user namespaces |
+
+Visual walkthrough of each screen: **[`docs/PLATFORM_GUIDE.md`](docs/PLATFORM_GUIDE.md)**.
+
 ## Secure authentication (OIDC SSO)
 
 The platform does **not** manage user passwords. Every sign-in is delegated to an **OIDC-compatible identity provider** using the industry-standard authorization code flow:
@@ -47,10 +59,6 @@ For each authenticated user on a registered cluster, the portal can automaticall
 - **Cluster explorer** — live namespace listing via the Kubernetes API.
 
 Isolation is **namespace-scoped**: each user gets their own namespace and token; the portal does not replace cluster-wide security policies or network policies you may still want to apply.
-
-### Platform guide (with illustrations)
-
-A visual walkthrough of each main screen, user journey, and architecture diagrams lives in **[`docs/PLATFORM_GUIDE.md`](docs/PLATFORM_GUIDE.md)** (UI mockups + Mermaid flows). Use it alongside this README when onboarding users or demoing the portal.
 
 ## Requirements
 
