@@ -20,6 +20,24 @@ Apply these once per cluster (with cluster-admin credentials) before registering
 
 Full application and cluster requirements are listed in the [main README](../README.md#requirements).
 
+## Why three tokens?
+
+For **defence in depth**, the portal does **not** use a single cluster-admin or all-in-one service account. Provisioning is split into three separate credentials, each with **only the permissions needed for one step**. If one token is leaked, rotated, or misused, the blast radius stays limited.
+
+| # | Token name (portal UI) | Service account | Bootstrap file | Purpose |
+|---|--------------------------|-----------------|----------------|---------|
+| **1** | **TOKEN FOR CREATING NAMESPACES** | `namespace-creator-sa` (`default`) | `namespace.yaml` | Create and list **Namespaces** only. Used when a user requests a resource (new namespace from their OIDC `sub`) and when admins **list namespaces** in the cluster explorer. Cannot create service accounts, secrets, or RBAC. |
+| **2** | **TOKEN FOR CREATING SERVICE ACCOUNT** | `sa-manager` (`kube-system`) | `sa.yaml` | Create **ServiceAccounts** and **Secrets** (`kubernetes.io/service-account-token`) in user namespaces. Used to create `workflow-runner` and issue each user’s personal workflow token. Cannot create namespaces or Role/RoleBinding objects. |
+| **3** | **TOKEN FOR CREATING ROLE AND ROLEBINDING** | `rbac-manager` (`kube-system`) | `rbac.yaml` | Create and update namespaced **Roles** and **RoleBindings** in user namespaces. Used to install `argo-workflows-role` and `argo-workflows-rb` with Argo Workflows policy rules. Cannot create namespaces or service account token secrets. |
+
+**Provision order in the portal** (each step uses the matching token only):
+
+1. Namespace creator → create user namespace  
+2. Service account creator → create `workflow-runner` + token Secret  
+3. Role binding creator → create Argo Workflows Role + RoleBinding  
+
+All three are **required** for full user provisioning. Registering a cluster with only the namespace token allows namespace listing in the explorer, but users cannot complete **Request resource** without the other two.
+
 ## Files
 
 | File | Purpose | Portal cluster field |
@@ -159,6 +177,7 @@ kubectl auth can-i create roles \
 
 ## Security notes
 
+- **Three-token split** — see [Why three tokens?](#why-three-tokens). Avoid merging the service accounts into one credential unless you accept the higher risk.
 - These tokens are **cluster-wide** credentials. Store them only in the portal database (or your secrets manager) and restrict who can view cluster settings.
 - Rotate by deleting the token Secret; Kubernetes recreates it if the ServiceAccount annotation is present, or create a new Secret and update the cluster record in the portal.
 - For production, consider narrower RBAC (e.g. delegate only to namespaces with a label) instead of cluster-wide Role rules; these manifests target dev/small clusters where simplicity is preferred.
