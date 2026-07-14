@@ -4,6 +4,8 @@ version = "0.0.1"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Farshad Radman" }]
 dependencies = [
     "django>=6.0.6",
     "kubernetes>=36.0.2",
